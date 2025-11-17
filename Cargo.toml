@@ -9,6 +9,8 @@ async-trait = "0.1.89"
 derive_more = "2.0.1"
 json = "0.12.4"
 serde = { version = "1.0.228", features = ["derive"] }
-surrealdb = "1.0.0"
+serde_json = "1.0"
+# surrealdb = "1.0.0"
+surrealdb = { version = "3.0.0-alpha.13", features = ["protocol-http"] }
 uuid = "1.18.1"
 validator = { version = "0.20.0", features = ["derive"] }
