@@ -23,12 +23,14 @@ async fn buy_pizza(body: Json<BuyPizzaRequest>, db: Data<Database>) -> impl Resp
     match is_valid {
         Ok(_) => {
             let pizza_name = body.pizza_name.clone();
+            println!("Pizzas name {}", pizza_name);
             let new_uuid = uuid::Uuid::new_v4().simple().to_string();
-
+            println!("new uuid {}", new_uuid);
             let new_pizza = db.add_pizza(Pizza::new(new_uuid, pizza_name)).await;
-
+            println!("New pizza {:?}", new_pizza);
             match new_pizza {
                 Some(created) => {
+                    println!("created {:?}", created);
                     HttpResponse::Ok().body(format!("Created new pizza {:?}", created))
                 }
                 None => HttpResponse::Ok().body("Error buying pizza"),
