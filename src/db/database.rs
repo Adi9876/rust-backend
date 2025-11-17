@@ -51,13 +51,33 @@ impl Database {
     }
 
     pub async fn get_all_pizzas(&self) -> Option<Vec<Pizza>> {
-        let mut response = self.client.query("SELECT * FROM pizza").await.ok()?;
-        let values: Vec<serde_json::Value> = response.take(0).ok()?;
-        let pizzas: Result<Vec<Pizza>, _> = values
-            .into_iter()
-            .map(|v| serde_json::from_value(v))
-            .collect();
-        pizzas.ok()
+        let mut response = self
+            .client
+            .query("SELECT uuid, pizza_name FROM pizza")
+            .await
+            .ok()?;
+
+        let values_result: Result<Vec<serde_json::Value>, _> = response.take(0);
+
+        match values_result {
+            Ok(values) => {
+                let pizzas: Result<Vec<Pizza>, _> = values
+                    .into_iter()
+                    .map(|v| serde_json::from_value(v))
+                    .collect();
+                match pizzas {
+                    Ok(p) => Some(p),
+                    Err(e) => {
+                        eprintln!("Error deserializing pizzas: {:?}", e);
+                        None
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("Error taking response: {:?}", e);
+                None
+            }
+        }
     }
 
     pub async fn add_pizza(&self, new_pizza: Pizza) -> Option<Pizza> {

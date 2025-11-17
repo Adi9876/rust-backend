@@ -9,11 +9,21 @@ use validator::Validate;
 
 #[get("/pizzas")]
 async fn get_pizzas(db: Data<Database>) -> impl Responder {
-    // HttpResponse::Ok().body("Pizzas available !")
     let pizzas = db.get_all_pizzas().await;
     match pizzas {
-        Some(found_pizzas) => HttpResponse::Ok().body(format!("{:?}", found_pizzas)),
-        None => HttpResponse::Ok().body("Error"),
+        Some(found_pizzas) => match serde_json::to_string(&found_pizzas) {
+            Ok(json) => HttpResponse::Ok()
+                .content_type("application/json")
+                .body(json),
+            Err(e) => {
+                eprintln!("Error serializing pizzas: {:?}", e);
+                HttpResponse::InternalServerError().body(format!("Error serializing pizzas: {}", e))
+            }
+        },
+        None => {
+            eprintln!("Failed to fetch pizzas from database");
+            HttpResponse::InternalServerError().body("Error: Failed to fetch pizzas from database")
+        }
     }
 }
 
