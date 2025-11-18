@@ -102,6 +102,29 @@ impl Database {
             }
         }
     }
+
+    pub async fn update_pizza(&self, uuid: String, new_pizza_name: String) -> Option<Pizza> {
+        let query = format!(
+            "UPDATE pizza SET pizza_name = '{}' WHERE uuid = '{}' RETURN uuid, pizza_name",
+            new_pizza_name, uuid
+        );
+        let mut response = self.client.query(query).await.ok()?;
+        let updated: Result<Vec<serde_json::Value>, _> = response.take(0);
+        match updated {
+            Ok(mut values) => {
+                if let Some(first_value) = values.pop() {
+                    serde_json::from_value(first_value).ok()
+                } else {
+                    eprintln!("No values returned from UPDATE query");
+                    None
+                }
+            }
+            Err(e) => {
+                eprintln!("Error taking response: {:?}", e);
+                None
+            }
+        }
+    }
 }
 
 // surreal start file:pizzadb --user root --password root
