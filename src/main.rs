@@ -53,10 +53,27 @@ async fn buy_pizza(body: Json<BuyPizzaRequest>, db: Data<Database>) -> impl Resp
 }
 
 #[patch("/updatepizza/{uuid}")]
-async fn update_pizza(update_pizza_url: Path<UpdatePizzaURL>) -> impl Responder {
-    let uuid = update_pizza_url.into_inner().uuid;
-
-    HttpResponse::Ok().body(format!("Updating the pizza with this id {}", uuid))
+async fn update_pizza(
+    update_pizza_url: Path<UpdatePizzaURL>,
+    body: Json<BuyPizzaRequest>,
+    db: Data<Database>,
+) -> impl Responder {
+    let is_valid = body.validate();
+    match is_valid {
+        Ok(_) => {
+            let uuid = update_pizza_url.into_inner().uuid;
+            let new_pizza_name = body.pizza_name.clone();
+            let updated_pizza = db.update_pizza(uuid, new_pizza_name).await;
+            match updated_pizza {
+                Some(pizza) => {
+                    println!("Updated pizza {:?}", pizza);
+                    HttpResponse::Ok().body(format!("Updated pizza {:?}", pizza))
+                }
+                None => HttpResponse::Ok().body("Error updating pizza - pizza not found"),
+            }
+        }
+        Err(_) => HttpResponse::Ok().body("Pizza name required"),
+    }
 }
 
 #[actix_web::main]
